@@ -1,14 +1,8 @@
 from app import app
-from flask import render_template, flash, redirect
+from flask import render_template
 from app.forms import LoginForm
-import psycopg2
-from sqlalchemy import create_engine
+from app import con
 
-database = "FlaskApp"
-user = "postgres"
-password = "root"
-host = "127.0.0.1"
-port = "5432"
 
 @app.route('/')
 @app.route('/index')
@@ -20,12 +14,6 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        connection = psycopg2.connect(user="postgres",
-                                      password="root",
-                                      host="localhost",
-                                      port="5432",
-                                      database="FlaskApp")
-        cur = connection.cursor()
-        cur.execute("select * from public.\"USERS\"")
-        print(cur.fetchone())
+        if con.find_user(form.username.data, form.password.data):
+            pass  # TODO action after login
     return render_template("login.html", form=form)
