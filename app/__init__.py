@@ -1,9 +1,12 @@
 from flask import Flask
 from config import Config
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from app.connection import Connection
 
 app = Flask(__name__)
 app.config.from_object(Config)
-con = Connection()
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 from app import routes
