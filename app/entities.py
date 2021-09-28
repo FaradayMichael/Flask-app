@@ -26,7 +26,7 @@ class Book(db.Model):
 class Author(db.Model):
     id_author = db.Column(db.Integer, primary_key=True)
     author_name = db.Column(db.String(), index=True, unique=True)
-    books = db.relationship("Book", backref="book", lazy="dynamic")
+    books = db.relationship("Book", backref="author", lazy="dynamic")
 
     def __repr__(self):
         return '<Author {}>'.format(self.author_name)
