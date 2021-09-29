@@ -1,12 +1,30 @@
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from app import login
 
 
-class Users(db.Model):
+@login.user_loader
+def load_user(id):
+    return Users.query.get(int(id))
+
+
+class Users(UserMixin, db.Model):
     id_user = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(), index=True, unique=True)
-    passw = db.Column(db.String(), index=True, unique=True)
+    pass_hash = db.Column(db.String(), index=True, unique=True)
     adm = db.Column(db.Boolean, index=True, unique=True)
     orders = db.relationship("Orders", backref="user", lazy="dynamic")
+
+    def __init__(self, username, adm):
+        self.username = username
+        self.adm = adm
+
+    def set_password(self, password):
+        self.pass_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.pass_hash, password)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
