@@ -1,30 +1,37 @@
 <html>
-    <head>
-        {% if title %}
-        <title>{{ title }} - flask-app</title>
-        {% else %}
-        <title>flask-app</title>
-        {% endif %}
-    </head>
-    <body>
-        <div>
-            Flask-app:
-            <a href="{{ url_for('index') }}">Home</a>
-            {% if current_user.is_anonymous %}
-            <a href="{{ url_for('login') }}">Login</a>
-            {% else %}
-            <a href="{{ url_for('logout') }}">Logout</a>
-            {% endif %}
-        </div>
-        <hr>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        {% for message in messages %}
-        {{ message }}
-        {% endfor %}
+<head>
+    {% if title %}
+    <title>{{ title }} - flask-app</title>
+    {% else %}
+    <title>flask-app</title>
+    {% endif %}
+</head>
+<body>
+<div>
+    <table width="100%">
+        <tr>
+            <td align="left">
+                Flask-app:
+                <a href="{{ url_for('index') }}">Home</a>
+                {% if current_user.is_anonymous %}
+                <a href="{{ url_for('login') }}">Login</a>
+                {% else %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+                {% endif %}
+            </td>
+            <td align="right">{{current_user.username}}</td>
+        </tr>
+    </table>
+</div>
+<hr>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+{{ message }}
+{% endfor %}
 
-        {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </body>
+{% endif %}
+{% endwith %}
+{% block content %}{% endblock %}
+</body>
 </html>

@@ -16,6 +16,9 @@ class Users(UserMixin, db.Model):
     adm = db.Column(db.Boolean, index=True, unique=True)
     orders = db.relationship("Orders", backref="user", lazy="dynamic")
 
+    def get_id(self):
+        return self.id_user
+
     def __init__(self, username, adm):
         self.username = username
         self.adm = adm
