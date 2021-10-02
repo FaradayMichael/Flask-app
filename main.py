@@ -1,5 +1,5 @@
 from app import db
-from app.entities import Users
+from app.models import Users
 
 if __name__ == "__main__":
     u = Users(username="qwe1", adm=True)
