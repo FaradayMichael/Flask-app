@@ -26,23 +26,21 @@ def login():
     if form.validate_on_submit():
         user = Users.query.filter(Users.username == form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash("No")
+            flash("No. Invalid.")
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for('index'))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, title="Login")
 
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        if not Users.query.filter(Users.username == form.username.data).first():
-            user = Users(username=form.username.data, passw=form.password.data, adm=False)
-            db.session.add(user)
-            db.session.commit()
-            return redirect('/index')
-        else:
-            flash("No")
-            redirect("/index")
-    return render_template("register.html", form=form)
+        user = Users(username=form.username.data, adm=False)
+        user.set_password(password=form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash("Register successfull")
+        return redirect(url_for('login'))
+    return render_template("register.html", form=form, title="Register")
