@@ -1,15 +1,16 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, RegisterForm
-from app.models import Users
+from app.forms import LoginForm, RegisterForm, BooksTable
+from app.models import Users, Book
 from flask_login import current_user, login_user, logout_user, login_required
 from app import db
 
 
 @app.route('/')
 @app.route('/index')
+@login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', title="Home")
 
 
 @app.route('/logout')
@@ -18,7 +19,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login_', methods=['GET', 'POST'])
 def login():
     # if current_user.is_authenticated:
     #     return redirect(url_for('index'))
@@ -44,3 +45,19 @@ def register():
         flash("Register successfull")
         return redirect(url_for('login'))
     return render_template("register.html", form=form, title="Register")
+
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = Users.query.filter_by(username=username).first_or_404()
+    return render_template("user.html", user=user)
+
+
+@app.route('/libre', methods=['GET', 'POST'])
+@login_required
+def libre():
+    books = Book.query.all()
+    books_table = BooksTable(books)
+
+    return render_template("libre.html", books=books_table, title="Libre")

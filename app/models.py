@@ -19,7 +19,7 @@ class Users(UserMixin, db.Model):
     def get_id(self):
         return self.id_user
 
-    def __init__(self, username, adm):
+    def __init__(self, username, adm: bool):
         self.username = username
         self.adm = adm
 
@@ -33,6 +33,18 @@ class Users(UserMixin, db.Model):
         return '<User {}>'.format(self.username)
 
 
+class Author(db.Model):
+    id_author = db.Column(db.Integer, primary_key=True)
+    author_name = db.Column(db.String(), index=True, unique=True)
+    books = db.relationship("Book", backref="author", lazy="dynamic")
+
+    def __init__(self, author_name):
+        self.author_name = author_name
+
+    def __repr__(self):
+        return self.author_name
+
+
 class Book(db.Model):
     id_book = db.Column(db.Integer, primary_key=True)
     book_name = db.Column(db.String(), index=True, unique=True)
@@ -40,17 +52,13 @@ class Book(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey("author.id_author"))
     orders = db.relationship("Orders", backref="book", lazy="dynamic")
 
+    def __init__(self, book_name, year, author: Author):
+        self.book_name = book_name
+        self.year = year
+        self.author = author
+
     def __repr__(self):
         return '<Book {}>'.format(self.book_name)
-
-
-class Author(db.Model):
-    id_author = db.Column(db.Integer, primary_key=True)
-    author_name = db.Column(db.String(), index=True, unique=True)
-    books = db.relationship("Book", backref="author", lazy="dynamic")
-
-    def __repr__(self):
-        return '<Author {}>'.format(self.author_name)
 
 
 class Orders(db.Model):

@@ -1,8 +1,16 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
+from flask_table import Table, Col
 
 from app.models import Users
+
+class BooksTable(Table):
+    classes = ['table']
+    id_book = Col("Id")
+    book_name = Col("Name")
+    year = Col("Year")
+    author = Col("Author")
 
 
 class LoginForm(FlaskForm):
