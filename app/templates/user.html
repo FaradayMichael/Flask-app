@@ -2,8 +2,15 @@
 <html>
 {% extends "base.html" %}
 {% block content %}
-    <h1>User: {{user.username}}</h1>
-
+<link rel="stylesheet" href="/static/styles.css">
+<h1>User: {{user.username}}</h1>
+{% if user.adm %}
+<i>Administrator</i>
+{% endif %}
+<h2>Orders:</h2>
+{{table}}
+<div>
     <a href="/logout">Logout</a>
+</div>
 {% endblock %}
 </html>

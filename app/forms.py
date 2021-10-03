@@ -1,3 +1,5 @@
+from abc import ABC
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
@@ -5,12 +7,29 @@ from flask_table import Table, Col
 
 from app.models import Users
 
+
 class BooksTable(Table):
     classes = ['table']
     id_book = Col("Id")
     book_name = Col("Name")
     year = Col("Year")
     author = Col("Author")
+
+
+class OrdersTable(Table):
+    classes = ['table']
+    id_order = Col("Id", show=False)
+    user = Col("User", show=False)
+    book_name = Col("Book")
+    book_author = Col("Author")
+    price = Col("Price")
+    is_active = Col("Condition")
+
+    def __init__(self, items, adm):
+        self.id_order.show = adm
+        self.user.show = adm
+        self.items = items
+
 
 
 class LoginForm(FlaskForm):

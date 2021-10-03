@@ -30,7 +30,7 @@ class Users(UserMixin, db.Model):
         return check_password_hash(self.pass_hash, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return self.username
 
 
 class Author(db.Model):
@@ -66,6 +66,14 @@ class Orders(db.Model):
     price = db.Column(db.Integer, index=True, unique=True)
     book_id = db.Column(db.Integer, db.ForeignKey("book.id_book"))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id_user"))
+    is_active = db.Column(db.Boolean, index=True, unique=True)
+
+    def __init__(self, book, price, user):
+        self.book = book
+        self.price = price
+        self.user = user
+        self.is_active = True
+
 
     def __repr__(self):
         return '<Order {}>'.format(self.id_order)

@@ -1,6 +1,6 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, RegisterForm, BooksTable
+from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable
 from app.models import Users, Book
 from flask_login import current_user, login_user, logout_user, login_required
 from app import db
@@ -51,7 +51,11 @@ def register():
 @login_required
 def user(username):
     user = Users.query.filter_by(username=username).first_or_404()
-    return render_template("user.html", user=user)
+    orders = user.orders.all()
+    items = [dict(id_order=o.id_order, user=user, book_name=o.book.book_name, book_author=o.book.author.author_name,
+                  price=o.price, is_active="Active" if o.is_active else "Not active") for o in orders]
+    table = OrdersTable(items, user.adm)
+    return render_template("user.html", user=user, table=table)
 
 
 @app.route('/libre', methods=['GET', 'POST'])
