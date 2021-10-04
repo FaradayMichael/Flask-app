@@ -1,5 +1,3 @@
-from abc import ABC
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
@@ -23,13 +21,16 @@ class OrdersTable(Table):
     book_name = Col("Book")
     book_author = Col("Author")
     price = Col("Price")
+    create_time = Col("Created")
     is_active = Col("Condition")
 
-    def __init__(self, items, adm):
+    def __init__(self, items: list, adm):
+        super().__init__(items)
         self.id_order.show = adm
         self.user.show = adm
         self.items = items
-
+        for i in items:
+            i["is_active"] = "Active" if i["is_active"] else "Not active"
 
 
 class LoginForm(FlaskForm):

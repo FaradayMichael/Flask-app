@@ -3,7 +3,19 @@ from flask import render_template, flash, redirect, url_for
 from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable
 from app.models import Users, Book
 from flask_login import current_user, login_user, logout_user, login_required
+
+from functools import wraps
 from app import db
+
+
+def admin_required(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.adm:
+            pass  # TODO
+        return func(*args, **kwargs)
+
+    return decorated_view
 
 
 @app.route('/')
@@ -52,10 +64,9 @@ def register():
 def user(username):
     user = Users.query.filter_by(username=username).first_or_404()
     orders = user.orders.all()
-    items = [dict(id_order=o.id_order, user=user, book_name=o.book.book_name, book_author=o.book.author.author_name,
-                  price=o.price, is_active="Active" if o.is_active else "Not active") for o in orders]
+    items = [o.to_dict() for o in orders]
     table = OrdersTable(items, user.adm)
-    return render_template("user.html", user=user, table=table)
+    return render_template("user.html", user=user, table=table, title=username)
 
 
 @app.route('/libre', methods=['GET', 'POST'])
@@ -63,5 +74,4 @@ def user(username):
 def libre():
     books = Book.query.all()
     books_table = BooksTable(books)
-
     return render_template("libre.html", books=books_table, title="Libre")

@@ -7,10 +7,12 @@
 {% if user.adm %}
 <i>Administrator</i>
 {% endif %}
-<h2>Orders:</h2>
+<h2>Orders</h2>
 {{table}}
 <div>
-    <a href="/logout">Logout</a>
+    <form method="get" action="/logout">
+        <button type="submit">Logout</button>
+    </form>
 </div>
 {% endblock %}
 </html>
