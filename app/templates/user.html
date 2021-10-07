@@ -3,11 +3,11 @@
 {% extends "base.html" %}
 {% block content %}
 <link rel="stylesheet" href="/static/styles.css">
-<h1>User: {{user.username}}</h1>
+<h2>User: {{user.username}}</h2>
 {% if user.adm %}
 <i>Administrator</i>
 {% endif %}
-<h2>Orders</h2>
+<h3>Orders</h3>
 {{table}}
 <div>
     <form method="get" action="/logout">

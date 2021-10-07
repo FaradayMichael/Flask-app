@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable
-from app.models import Users, Book
+from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable
+from app.models import Users, Book, Orders
 from flask_login import current_user, login_user, logout_user, login_required
 
 from functools import wraps
@@ -12,7 +12,7 @@ def admin_required(func):
     @wraps(func)
     def decorated_view(*args, **kwargs):
         if not current_user.adm:
-            pass  # TODO
+            redirect(url_for("index"))
         return func(*args, **kwargs)
 
     return decorated_view
@@ -63,8 +63,8 @@ def register():
 @login_required
 def user(username):
     user = Users.query.filter_by(username=username).first_or_404()
-    orders = user.orders.all()
-    items = [o.to_dict() for o in orders]
+    orders = user.orders
+    items = [o.dict for o in orders]
     table = OrdersTable(items, user.adm)
     return render_template("user.html", user=user, table=table, title=username)
 
@@ -73,5 +73,19 @@ def user(username):
 @login_required
 def libre():
     books = Book.query.all()
-    books_table = BooksTable(books)
+    books_table = BooksTable(books, current_user.adm)
     return render_template("libre.html", books=books_table, title="Libre")
+
+
+@app.route('/administration', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def administration():
+    books = Book.query.all()
+    books_table = BooksTable(books, current_user.adm)
+    orders = Orders.query.all()
+    orders_table = OrdersTable(items=[o.dict for o in orders], adm=current_user.adm)
+    users = Users.query.all()
+    users_table = UsersTable(users)
+    return render_template("administration.html", title="Administration", books=books_table, users=users_table,
+                           orders=orders_table)

@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
-from flask_table import Table, Col
+from flask_table import Table, Col, OptCol
 
 from app.models import Users
 
@@ -13,6 +13,10 @@ class BooksTable(Table):
     year = Col("Year")
     author = Col("Author")
 
+    def __init__(self, items: list, adm):
+        super().__init__(items)
+        self.id_book.show = adm
+
 
 class OrdersTable(Table):
     classes = ['table']
@@ -22,15 +26,24 @@ class OrdersTable(Table):
     book_author = Col("Author")
     price = Col("Price")
     create_time = Col("Created")
-    is_active = Col("Condition")
+    is_active = OptCol("Condition", choices={True: "Active", False: "Not active"})
 
     def __init__(self, items: list, adm):
         super().__init__(items)
         self.id_order.show = adm
         self.user.show = adm
-        self.items = items
-        for i in items:
-            i["is_active"] = "Active" if i["is_active"] else "Not active"
+
+
+class UsersTable(Table):
+    classes = ['table']
+    id_user = Col("Id")
+    username = Col("Username")
+    pass_hash = Col("Password hash")
+    adm = OptCol("Role", choices={True: "Admin", False: "User"})
+
+    def __init__(self, items: list):
+        super().__init__(items)
+        self.pass_hash.show = False
 
 
 class LoginForm(FlaskForm):

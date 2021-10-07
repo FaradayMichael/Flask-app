@@ -14,7 +14,7 @@ class Users(UserMixin, db.Model):
     username = db.Column(db.String(), index=True, unique=True)
     pass_hash = db.Column(db.String())
     adm = db.Column(db.Boolean)
-    orders = db.relationship("Orders", backref="user", lazy="dynamic")
+    orders = db.relationship("Orders", backref="user", lazy=True)
 
     def get_id(self):
         return self.id_user
@@ -28,6 +28,9 @@ class Users(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.pass_hash, password)
+
+    def __eq__(self, other):
+        return self.username==other.username
 
     def __repr__(self):
         return self.username
@@ -43,6 +46,9 @@ class Author(db.Model):
 
     def __repr__(self):
         return self.author_name
+
+    def __eq__(self, other):
+        return self.author_name==other.author_name
 
 
 class Book(db.Model):
@@ -69,7 +75,8 @@ class Orders(db.Model):
     create_time = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     is_active = db.Column(db.Boolean)
 
-    def to_dict(self):
+    @property
+    def dict(self):
         return dict(id_order=self.id_order, user=self.user, book_name=self.book.book_name,
                     book_author=self.book.author.author_name, create_time=self.create_time,
                     price=self.price, is_active=self.is_active)
