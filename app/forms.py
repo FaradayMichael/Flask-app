@@ -1,7 +1,9 @@
+from flask import url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
-from flask_table import Table, Col, OptCol
+from flask_table import Table, Col, OptCol, ButtonCol, LinkCol
+from flask import request
 
 from app.models import Users
 
@@ -12,6 +14,7 @@ class BooksTable(Table):
     book_name = Col("Name")
     year = Col("Year")
     author = Col("Author")
+
 
     def __init__(self, items: list, adm):
         super().__init__(items)
@@ -27,6 +30,7 @@ class OrdersTable(Table):
     price = Col("Price")
     create_time = Col("Created")
     is_active = OptCol("Condition", choices={True: "Active", False: "Not active"})
+    delete = ButtonCol(name="Delete", url_kwargs=dict(id="id_order"), endpoint="delete_order")
 
     def __init__(self, items: list, adm):
         super().__init__(items)

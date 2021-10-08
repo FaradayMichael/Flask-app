@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for
 from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable
 from app.models import Users, Book, Orders
 from flask_login import current_user, login_user, logout_user, login_required
-
+from flask import request
 from functools import wraps
 from app import db
 
@@ -66,6 +66,7 @@ def user(username):
     orders = user.orders
     items = [o.dict for o in orders]
     table = OrdersTable(items, user.adm)
+    table.delete._url_kwargs_extra=dict(url_back=f"user/{username}")
     return render_template("user.html", user=user, table=table, title=username)
 
 
@@ -77,7 +78,7 @@ def libre():
     return render_template("libre.html", books=books_table, title="Libre")
 
 
-@app.route('/administration', methods=['GET', 'POST'])
+@app.route('/administration', )
 @login_required
 @admin_required
 def administration():
@@ -89,3 +90,17 @@ def administration():
     users_table = UsersTable(users)
     return render_template("administration.html", title="Administration", books=books_table, users=users_table,
                            orders=orders_table)
+
+
+@app.route("/delete_order", methods=['GET', 'POST'])
+@login_required
+def delete_order():
+    print("a")
+    id = int(request.args.get('id'))
+    url_back = request.args.get("url_back")
+    order = Orders.query.first_or_404(id)
+
+    db.session.delete(order)
+    db.session.commit()
+
+    return redirect(url_back)

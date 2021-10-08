@@ -44,5 +44,4 @@ def select_test_users():
     return Users.query.filter(Users.username.in_(["qwe1", "qwe2"])).all()
 
 if __name__ == "__main__":
-    u = select_test_users()[0]
-    print(u.orders)
+    create_test_orders()
