@@ -1,6 +1,12 @@
+import flask
+
 from app import db
 from app.models import Users, Author, Book, Orders
 from sqlalchemy import exc
+from json import loads, dumps
+from sqlalchemy.orm.session import make_transient_to_detached
+import dictalchemy
+
 
 
 def insert_test_users():
@@ -44,4 +50,5 @@ def select_test_users():
     return Users.query.filter(Users.username.in_(["qwe1", "qwe2"])).all()
 
 if __name__ == "__main__":
-    create_test_orders()
+    print()
+

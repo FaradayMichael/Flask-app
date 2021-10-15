@@ -1,11 +1,11 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable
-from app.models import Users, Book, Orders
+from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable, AddBookForm
+from app.models import Users, Book, Orders, Author, Status
 from flask_login import current_user, login_user, logout_user, login_required
-from flask import request
+from flask import request, session
 from functools import wraps
-from app import db
+from app import db, cart_order
 
 
 def admin_required(func):
@@ -22,13 +22,50 @@ def admin_required(func):
 @app.route('/index')
 @login_required
 def index():
+    session.clear()
     return render_template('index.html', title="Home")
 
 
 @app.route('/logout')
 def logout():
+    session.clear()
     logout_user()
     return redirect(url_for('index'))
+
+
+@app.route("/add_to_cart", methods=['GET', 'POST'])
+@login_required
+def add_to_cart():
+    global cart_order
+    id_book = request.args.get("id")
+    book = Book.query.filter(Book.id_book == id_book).first()
+
+    if not cart_order.user:
+        order = Orders.query.filter(Orders.user_id == current_user.id_user, Orders.status == Status.Active).first()
+        if not order:
+            cart_order.user = current_user
+        else:
+            cart_order = order
+
+    cart_order.books.append(book)
+    print(cart_order.user)
+    print(cart_order.books)
+    return redirect(request.referrer or url_for("libre"))
+
+
+@app.route("/add_book", methods=['GET', 'POST'])
+@admin_required
+def add_book():
+    form = AddBookForm()
+    if form.validate_on_submit():
+        author = Author.query.filter(Author.author_name == form.author.data).first()
+        if not author:
+            author = Author(author_name=form.author.data)
+        book = Book(book_name=form.book_name.data, author=author, year=form.year.data, price=form.price.data)
+        db.session.add(book)
+        db.session.commit()
+        return redirect(url_for("administration"))
+    return render_template("add_book.html", form=form, title="Add Book")
 
 
 @app.route('/login_', methods=['GET', 'POST'])
@@ -59,14 +96,14 @@ def register():
     return render_template("register.html", form=form, title="Register")
 
 
-@app.route('/user/<username>')
+@app.route('/user/<username>', methods=['GET', 'POST'])
 @login_required
 def user(username):
+    print(session.get('cart'))
     user = Users.query.filter_by(username=username).first_or_404()
     orders = user.orders
     items = [o.dict for o in orders]
     table = OrdersTable(items, user.adm)
-    table.delete._url_kwargs_extra=dict(url_back=f"user/{username}")
     return render_template("user.html", user=user, table=table, title=username)
 
 
@@ -74,16 +111,16 @@ def user(username):
 @login_required
 def libre():
     books = Book.query.all()
-    books_table = BooksTable(books, current_user.adm)
+    books_table = BooksTable(books, current_user.adm, adm_page=False)
     return render_template("libre.html", books=books_table, title="Libre")
 
 
-@app.route('/administration', )
+@app.route('/administration', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def administration():
     books = Book.query.all()
-    books_table = BooksTable(books, current_user.adm)
+    books_table = BooksTable(books, current_user.adm, adm_page=True)
     orders = Orders.query.all()
     orders_table = OrdersTable(items=[o.dict for o in orders], adm=current_user.adm)
     users = Users.query.all()
@@ -95,12 +132,19 @@ def administration():
 @app.route("/delete_order", methods=['GET', 'POST'])
 @login_required
 def delete_order():
-    print("a")
-    id = int(request.args.get('id'))
-    url_back = request.args.get("url_back")
-    order = Orders.query.first_or_404(id)
-
+    id_order = int(request.args.get('id'))
+    order = Orders.query.first_or_404(id_order)
     db.session.delete(order)
     db.session.commit()
+    return redirect(request.referrer or url_for("index"))
 
-    return redirect(url_back)
+
+@app.route("/delete_book", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_book():
+    id_book = int(request.args.get("id"))
+    book = Book.query.first_or_404(id_book)
+    db.session.delete(book)
+    db.session.commit()
+    return redirect(request.referrer or url_for("index"))

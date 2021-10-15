@@ -1,24 +1,44 @@
-from flask import url_for
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, IntegerField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
 from flask_table import Table, Col, OptCol, ButtonCol, LinkCol
-from flask import request
-
 from app.models import Users
 
+
+class AddBookForm(FlaskForm):
+    book_name = StringField("Book Name", validators=[DataRequired()])
+    author = StringField("Author", validators=[DataRequired()])
+    year = IntegerField("Year", validators=[DataRequired()])
+    price = IntegerField("Price", validators=[DataRequired()])
+    submit = SubmitField('Add')
+
+
+
+class CartTable(Table):
+    classes = ['table']
+    id_book = Col("Id")
+    book_name = Col("Name")
+    author = Col("Author")
+    year = Col("Year")
+    price = Col("Price")
+    delete = ButtonCol(name="Delete", endpoint="delete_book", url_kwargs=dict(id="id_book"))
 
 class BooksTable(Table):
     classes = ['table']
     id_book = Col("Id")
     book_name = Col("Name")
-    year = Col("Year")
     author = Col("Author")
+    year = Col("Year")
+    price = Col("Price")
+    delete = ButtonCol(name="Delete", endpoint="delete_book", url_kwargs=dict(id="id_book"))
+    add_to_cart = ButtonCol("Add to Cart", endpoint="add_to_cart", url_kwargs=dict(id="id_book"))
 
-
-    def __init__(self, items: list, adm):
+    def __init__(self, items: list, adm, adm_page):
         super().__init__(items)
         self.id_book.show = adm
+        self.delete.show = adm_page
+        self.add_to_cart.show = not adm_page
+
 
 
 class OrdersTable(Table):
@@ -29,8 +49,9 @@ class OrdersTable(Table):
     book_author = Col("Author")
     price = Col("Price")
     create_time = Col("Created")
-    is_active = OptCol("Condition", choices={True: "Active", False: "Not active"})
-    delete = ButtonCol(name="Delete", url_kwargs=dict(id="id_order"), endpoint="delete_order")
+    #is_active = OptCol("Condition", choices={True: "Active", False: "Not active"})
+    status = Col("Status")
+    delete = ButtonCol(name="Delete", endpoint="delete_order", url_kwargs=dict(id="id_order"))
 
     def __init__(self, items: list, adm):
         super().__init__(items)
