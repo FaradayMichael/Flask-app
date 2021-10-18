@@ -5,7 +5,7 @@ from app.models import Users, Book, Orders, Author, Status
 from flask_login import current_user, login_user, logout_user, login_required
 from flask import request, session
 from functools import wraps
-from app import db, cart_order
+from app import db
 
 
 def admin_required(func):
@@ -36,20 +36,14 @@ def logout():
 @app.route("/add_to_cart", methods=['GET', 'POST'])
 @login_required
 def add_to_cart():
-    global cart_order
     id_book = request.args.get("id")
-    book = Book.query.filter(Book.id_book == id_book).first()
-
-    if not cart_order.user:
-        order = Orders.query.filter(Orders.user_id == current_user.id_user, Orders.status == Status.Active).first()
-        if not order:
-            cart_order.user = current_user
-        else:
-            cart_order = order
-
+    book = Book.query.filter(Book.id_book==int(id_book)).first()
+    cart_order = Orders.query.filter(Orders.user==current_user and Orders.status==Status.Active).first()
+    if not cart_order:
+        cart_order = Orders(user=current_user)
     cart_order.books.append(book)
-    print(cart_order.user)
-    print(cart_order.books)
+    db.session.add(cart_order)
+    db.session.commit()
     return redirect(request.referrer or url_for("libre"))
 
 
@@ -99,12 +93,15 @@ def register():
 @app.route('/user/<username>', methods=['GET', 'POST'])
 @login_required
 def user(username):
-    print(session.get('cart'))
+    cart_order = Orders.query.filter(Orders.user==current_user and Orders.status==Status.Active).first()
+    books = cart_order.books
+    print(books)
+    cart_table = BooksTable([b.dict for b in books], current_user.adm, False)
     user = Users.query.filter_by(username=username).first_or_404()
     orders = user.orders
     items = [o.dict for o in orders]
     table = OrdersTable(items, user.adm)
-    return render_template("user.html", user=user, table=table, title=username)
+    return render_template("user.html", user=user, table=table, cart_table=cart_table, title=username)
 
 
 @app.route('/libre', methods=['GET', 'POST'])

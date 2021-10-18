@@ -4,9 +4,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-
 from config import Config
-#from app.models import Orders
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,8 +13,5 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'
 bootstrap = Bootstrap(app)
-
-from app.models import Orders
-cart_order = Orders()
 
 from app import routes, models

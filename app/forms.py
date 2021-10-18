@@ -45,8 +45,7 @@ class OrdersTable(Table):
     classes = ['table']
     id_order = Col("Id", show=False)
     user = Col("User", show=False)
-    book_name = Col("Book")
-    book_author = Col("Author")
+    books = Col("Book")
     price = Col("Price")
     create_time = Col("Created")
     #is_active = OptCol("Condition", choices={True: "Active", False: "Not active"})

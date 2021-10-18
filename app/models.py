@@ -16,7 +16,7 @@ class Users(UserMixin, db.Model, SerializerMixin):
     username = db.Column(db.String(), index=True, unique=True)
     pass_hash = db.Column(db.String())
     adm = db.Column(db.Boolean)
-    orders = db.relationship("Orders", backref="user", lazy=True)
+    orders = db.relationship("Orders", backref="user", lazy='subquery')
 
     def get_id(self):
         return self.id_user
@@ -44,7 +44,7 @@ class Author(db.Model, SerializerMixin):
 
     id_author = db.Column(db.Integer, primary_key=True)
     author_name = db.Column(db.String(), index=True)
-    books = db.relationship("Book", backref="author", lazy=True)
+    books = db.relationship("Book", backref="author", lazy='subquery')
 
     def __init__(self, author_name):
         self.author_name = author_name
@@ -66,8 +66,6 @@ orders_book = db.Table(
 class Book(db.Model, SerializerMixin):
     __tablename__ = "book"
 
-
-
     id_book = db.Column(db.Integer, primary_key=True)
     book_name = db.Column(db.String(), index=True)
     author_id = db.Column(db.Integer, db.ForeignKey("author.id_author"))
@@ -82,10 +80,13 @@ class Book(db.Model, SerializerMixin):
         self.author = author
         self.price = price
 
+    @property
+    def dict(self):
+        return dict(id_book=self.id_book, book_name=self.book_name, author=self.author, year=self.year,
+                    price=self.price)
 
     def __repr__(self):
         return self.book_name
-
 
 
 class Status(Enum):
@@ -93,24 +94,21 @@ class Status(Enum):
     Opened = "Opened"
     Closed = "Closed"
 
+
 class Orders(db.Model):
     __tablename__ = "orders"
     id_order = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Integer)
-    books = db.relationship("Book", secondary="orders_book", backref=db.backref('orders', lazy='dynamic'))
+    books = db.relationship("Book", secondary="orders_book", backref=db.backref('orders', lazy='subquery'))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id_user"))
     create_time = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     status = db.Column(db.Enum(Status), default=Status.Active)
 
     @property
     def dict(self):
-        return dict(id_order=self.id_order, user=self.user, book_name=self.book.book_name,
-                    book_author=self.book.author.author_name, create_time=self.create_time,
-                    price=self.price, is_active=self.status_id)
-
+        return dict(id_order=self.id_order, user=self.user, books=self.books,
+                    create_time=self.create_time,
+                    price=self.price, status=self.status)
 
     def __repr__(self):
         return '<Order {}>'.format(self.id_order)
-
-
-
