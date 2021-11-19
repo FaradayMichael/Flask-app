@@ -1,7 +1,7 @@
 import flask
 
 from app import db
-from app.models import Users, Author, Book, Orders
+from app.models import Users, Author, Book, Orders, Status
 from sqlalchemy import exc
 from json import loads, dumps
 from sqlalchemy.orm.session import make_transient_to_detached
@@ -50,5 +50,8 @@ def select_test_users():
     return Users.query.filter(Users.username.in_(["qwe1", "qwe2"])).all()
 
 if __name__ == "__main__":
-    print()
+    u = select_test_users()[0]
+    o = Orders(user=u, status=Status.Active)
+    print(Orders.query.filter(Orders.status.in_([Status.Opened, Status.Closed])))
+
 

@@ -104,6 +104,17 @@ class Orders(db.Model):
     create_time = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     status = db.Column(db.Enum(Status), default=Status.Active)
 
+    def get_price(self):
+        books = self.books
+        if books:
+            return sum([b.price for b in books])
+        else:
+            return 0
+
+    @classmethod
+    def get_active_order(cls, user):
+        return cls.query.filter(cls.user==user, cls.status==Status.Active).first()
+
     @property
     def dict(self):
         return dict(id_order=self.id_order, user=self.user, books=self.books,

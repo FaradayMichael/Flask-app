@@ -1,6 +1,6 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable, AddBookForm
+from app.forms import LoginForm, RegisterForm, BooksTable, OrdersTable, UsersTable, AddBookForm, CartTable
 from app.models import Users, Book, Orders, Author, Status
 from flask_login import current_user, login_user, logout_user, login_required
 from flask import request, session
@@ -37,8 +37,8 @@ def logout():
 @login_required
 def add_to_cart():
     id_book = request.args.get("id")
-    book = Book.query.filter(Book.id_book==int(id_book)).first()
-    cart_order = Orders.query.filter(Orders.user==current_user and Orders.status==Status.Active).first()
+    book = Book.query.filter(Book.id_book == int(id_book)).first()
+    cart_order = Orders.query.filter(Orders.user == current_user and Orders.status == Status.Active).first()
     if not cart_order:
         cart_order = Orders(user=current_user)
     cart_order.books.append(book)
@@ -93,15 +93,17 @@ def register():
 @app.route('/user/<username>', methods=['GET', 'POST'])
 @login_required
 def user(username):
-    cart_order = Orders.query.filter(Orders.user==current_user and Orders.status==Status.Active).first()
-    books = cart_order.books
-    print(books)
-    cart_table = BooksTable([b.dict for b in books], current_user.adm, False)
+    cart_order: Orders = Orders.query.filter(Orders.user == current_user and Orders.status == Status.Active).first()
+    price = cart_order.get_price() if cart_order else 0
+    books = cart_order.books if cart_order else []
+    cart_table: Orders = CartTable([b.dict for b in books], current_user.adm)
+
     user = Users.query.filter_by(username=username).first_or_404()
-    orders = user.orders
+    orders = Orders.query.filter(Orders.user == user and not Orders.status == Status.Active).all()
     items = [o.dict for o in orders]
     table = OrdersTable(items, user.adm)
-    return render_template("user.html", user=user, table=table, cart_table=cart_table, title=username)
+    return render_template("user.html", user=user, table=table, cart_table=cart_table, title=username,
+                           price=price)
 
 
 @app.route('/libre', methods=['GET', 'POST'])
@@ -131,9 +133,22 @@ def administration():
 def delete_order():
     id_order = int(request.args.get('id'))
     order = Orders.query.first_or_404(id_order)
+    print(order)
     db.session.delete(order)
     db.session.commit()
     return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/delete_from_cart", methods=['GET', 'POST'])
+@login_required
+def delete_from_cart():
+    id_book = int(request.args.get("id"))
+    cart_order = Orders.query.filter(Orders.user == current_user and Orders.status == Status.Active).first()
+    book = Book.query.filter(Book.id_book == id_book).first()
+    cart_order.books.remove(book)
+    db.session.add(cart_order)
+    db.session.commit()
+    return redirect(request.referrer)
 
 
 @app.route("/delete_book", methods=['GET', 'POST'])
@@ -145,3 +160,25 @@ def delete_book():
     db.session.delete(book)
     db.session.commit()
     return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/clear_cart")
+@login_required
+def clear_cart():
+    cart_order = Orders.get_active_order(current_user)
+    if cart_order and cart_order.books:
+        cart_order.books.clear()
+        db.session.add(cart_order)
+        db.session.commit()
+    return redirect(request.referrer or url_for(f"/user/{current_user.username}"))
+
+
+@app.route("/submit_cart")
+@login_required
+def submit_cart():
+    cart_order: Orders = Orders.get_active_order(current_user)
+    if cart_order:
+        cart_order.status = Status.Opened
+        db.session.add(cart_order)
+        db.session.commit()
+    return redirect(request.referrer or url_for(f"/user/{current_user.username}"))

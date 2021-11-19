@@ -21,7 +21,11 @@ class CartTable(Table):
     author = Col("Author")
     year = Col("Year")
     price = Col("Price")
-    delete = ButtonCol(name="Delete", endpoint="delete_book", url_kwargs=dict(id="id_book"))
+    delete = ButtonCol(name="Delete", endpoint="delete_from_cart", url_kwargs=dict(id="id_book"))
+
+    def __init__(self, items: list, adm):
+        super().__init__(items)
+        self.id_book.show = adm
 
 class BooksTable(Table):
     classes = ['table']
